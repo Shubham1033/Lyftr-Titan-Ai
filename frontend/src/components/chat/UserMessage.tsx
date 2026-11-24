@@ -8,10 +8,10 @@ interface UserMessageProps {
 
 export const UserMessage: React.FC<UserMessageProps> = ({ content, timestamp }) => {
   return (
-    <div className="w-full py-4 px-4 sm:px-6">
-      <div className="max-w-3xl mx-auto flex justify-end gap-3">
+    <div className="w-full py-3.5 px-4 sm:px-6">
+      <div className="max-w-3xl mx-auto flex justify-end gap-3 items-start">
         <div className="flex flex-col items-end max-w-[85%] sm:max-w-[75%]">
-          <div className="bg-[#F5F5F3] text-[#141414] px-4 py-2.5 rounded-2xl rounded-tr-sm border border-neutral-200/70 shadow-2xs text-sm leading-relaxed whitespace-pre-wrap break-words">
+          <div className="bg-[#18181B] text-white px-4 py-3 rounded-2xl rounded-tr-xs shadow-sm text-sm leading-relaxed whitespace-pre-wrap break-words border border-neutral-800">
             {content}
           </div>
           {timestamp && (
@@ -20,7 +20,7 @@ export const UserMessage: React.FC<UserMessageProps> = ({ content, timestamp }) 
             </span>
           )}
         </div>
-        <div className="shrink-0 w-7 h-7 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-600 mt-0.5">
+        <div className="shrink-0 w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center text-xs font-medium shadow-xs border border-neutral-700 mt-0.5">
           <User className="w-4 h-4" />
         </div>
       </div>

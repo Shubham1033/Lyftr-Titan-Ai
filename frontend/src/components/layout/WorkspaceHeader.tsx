@@ -1,5 +1,5 @@
-import React from 'react';
-import { Menu, Activity, Sliders, Cpu } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, Activity, Sliders, Cpu, Copy, Check } from 'lucide-react';
 
 interface WorkspaceHeaderProps {
   sessionId: string;
@@ -16,30 +16,47 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   onOpenSystemPrompt,
   isInspectorOpen,
 }) => {
+  const [copiedSession, setCopiedSession] = useState(false);
+
+  const handleCopySession = () => {
+    navigator.clipboard.writeText(sessionId);
+    setCopiedSession(true);
+    setTimeout(() => setCopiedSession(false), 2000);
+  };
+
   return (
-    <header className="h-14 border-b border-neutral-200/80 bg-white flex items-center justify-between px-4 sm:px-6 shrink-0">
+    <header className="h-14 border-b border-neutral-200 bg-white/80 backdrop-blur-md flex items-center justify-between px-4 sm:px-6 shrink-0 sticky top-0 z-20">
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="md:hidden text-neutral-500 hover:text-neutral-800 p-1 rounded hover:bg-neutral-100 cursor-pointer"
+          className="md:hidden text-neutral-500 hover:text-neutral-800 p-1.5 rounded-lg hover:bg-neutral-100 cursor-pointer"
         >
           <Menu className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold tracking-wider uppercase text-neutral-700">
+          <span className="text-xs font-bold tracking-wider uppercase text-neutral-900">
             AI WORKSPACE
           </span>
           <span className="text-neutral-300">/</span>
-          <span className="text-xs font-mono text-neutral-400 truncate max-w-[120px] sm:max-w-[200px]" title={sessionId}>
-            {sessionId}
-          </span>
+          <button
+            onClick={handleCopySession}
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-neutral-100 text-xs font-mono text-neutral-500 hover:text-neutral-800 transition-colors cursor-pointer"
+            title="Click to copy session ID"
+          >
+            <span>{sessionId}</span>
+            {copiedSession ? (
+              <Check className="w-3 h-3 text-[#10B981]" />
+            ) : (
+              <Copy className="w-3 h-3 text-neutral-400" />
+            )}
+          </button>
         </div>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Model badge */}
-        <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#F5F5F3] border border-neutral-200/80 text-xs font-mono text-neutral-600">
+        <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-100 border border-neutral-200 text-xs font-mono text-neutral-700 font-medium">
           <Cpu className="w-3.5 h-3.5 text-[#2563B0]" />
           gemini-3.5-flash-lite
         </div>
@@ -47,8 +64,8 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         {/* System prompt toggle */}
         <button
           onClick={onOpenSystemPrompt}
-          className="p-1.5 rounded border border-neutral-200 hover:bg-neutral-50 text-neutral-600 text-xs inline-flex items-center gap-1 cursor-pointer"
-          title="System prompt"
+          className="p-1.5 px-2.5 rounded-lg border border-neutral-200 hover:bg-neutral-50 text-neutral-700 text-xs inline-flex items-center gap-1.5 cursor-pointer font-medium transition-colors"
+          title="Configure System Prompt"
         >
           <Sliders className="w-3.5 h-3.5 text-neutral-500" />
           <span className="hidden sm:inline">System Prompt</span>
@@ -57,12 +74,12 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         {/* Request Inspector Toggle */}
         <button
           onClick={onToggleInspector}
-          className={`p-1.5 px-2.5 rounded border text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer ${
+          className={`p-1.5 px-3 rounded-lg border text-xs font-semibold inline-flex items-center gap-1.5 transition-all cursor-pointer ${
             isInspectorOpen
-              ? 'bg-[#2563B0] text-white border-transparent'
-              : 'border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+              ? 'bg-[#2563B0] text-white border-transparent shadow-xs'
+              : 'border-neutral-200 text-neutral-800 hover:bg-neutral-50'
           }`}
-          title="Toggle Request Inspector drawer"
+          title="Toggle Request Telemetry drawer"
         >
           <Activity className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Request Inspector</span>
