@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --color-paper: #FFFFFF;
@@ -11,6 +13,13 @@
     --color-orange: #F2721C;
     --color-green: #10B981;
     --color-cream: #FAF9F6;
+  }
+
+  .dark {
+    --color-paper: #000000;
+    --color-offwhite: #0A0A0A;
+    --color-ink: #F8FAFC;
+    --color-cream: #121212;
   }
 
   body {
@@ -33,6 +42,11 @@
   background-size: 20px 20px;
 }
 
+.dark .bg-dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
@@ -45,6 +59,12 @@
   background: #E2E8F0;
   border-radius: 9999px;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: #27272A;
+}
 ::-webkit-scrollbar-thumb:hover {
   background: #CBD5E1;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3F3F46;
 }

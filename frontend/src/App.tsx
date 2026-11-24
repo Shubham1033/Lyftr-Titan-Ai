@@ -7,6 +7,7 @@ import { AssistantMessage } from './components/chat/AssistantMessage';
 import { ChatInput } from './components/chat/ChatInput';
 import { InspectorDrawer } from './components/inspector/InspectorDrawer';
 import { SystemPromptModal } from './components/settings/SystemPromptModal';
+import { FailoverToast, type ToastData } from './components/common/FailoverToast';
 import { checkHealth, sendChatMessage, ApiError } from './services/api';
 import type { ChatMessageItem, ResponseMetadata, HealthResponsePayload } from './types/chat';
 import { AlertCircle } from 'lucide-react';
@@ -34,7 +35,26 @@ export function App() {
   const [healthLoading, setHealthLoading] = useState<boolean>(true);
   const [isSidebarOpenMobile, setIsSidebarOpenMobile] = useState<boolean>(false);
 
+  // Theme State: 'dark' (Pitch Black) or 'light'
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('titan_theme');
+    return saved === 'dark' || saved === 'light' ? saved : 'light';
+  });
+
+  // Failover Toast State
+  const [failoverToast, setFailoverToast] = useState<ToastData | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Apply dark class to documentElement
+  useEffect(() => {
+    localStorage.setItem('titan_theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   // Poll backend health on mount
   useEffect(() => {
@@ -71,6 +91,21 @@ export function App() {
     setSelectedMetadata(null);
   };
 
+  // Calculate live Gateway Efficiency Metrics
+  const assistantMessages = messages.filter((m) => m.role === 'assistant' && m.metadata);
+  const totalRequests = assistantMessages.length;
+  const cachedMessages = assistantMessages.filter((m) => m.metadata?.resolution_source === 'LLM_CACHE');
+  const cacheHits = cachedMessages.length;
+  const tokensSaved = cachedMessages.reduce(
+    (acc, m) => acc + (m.metadata?.input_tokens || 0) + (m.metadata?.output_tokens || 0),
+    0
+  );
+  // Estimate ~2500ms baseline live inference latency
+  const timeSavedMs = cachedMessages.reduce(
+    (acc, m) => acc + Math.max(0, 2500 - (m.metadata?.latency_ms || 0)),
+    0
+  );
+
   // Handle sending a message
   const handleSendMessage = async (text: string) => {
     setErrorBanner(null);
@@ -104,6 +139,16 @@ export function App() {
 
       setMessages((prev) => [...prev, assistantMsg]);
       setSelectedMetadata(res.metadata);
+
+      // Check if automatic key failover occurred
+      if (res.metadata.fallback_attempts > 0) {
+        setFailoverToast({
+          id: `toast-${Date.now()}`,
+          keyId: res.metadata.key_id || 'fallback_key',
+          fallbackAttempts: res.metadata.fallback_attempts,
+          message: `Primary key rate-limited or failed -> Automatically failed over to ${res.metadata.key_id} without dropping turn.`,
+        });
+      }
     } catch (err: any) {
       if (err instanceof ApiError) {
         if (err.status === 503) {
@@ -122,7 +167,10 @@ export function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-white text-[#141414]">
+    <div className={`flex h-screen w-screen overflow-hidden ${theme === 'dark' ? 'bg-black text-[#F8FAFC]' : 'bg-white text-[#0F172A]'}`}>
+      {/* Failover Event Visual Toast */}
+      <FailoverToast toast={failoverToast} onDismiss={() => setFailoverToast(null)} />
+
       {/* Sidebar */}
       <Sidebar
         sessionId={sessionId}
@@ -133,6 +181,10 @@ export function App() {
         onSimulateHeaderChange={setSimulateHeader}
         isOpen={isSidebarOpenMobile}
         onCloseMobile={() => setIsSidebarOpenMobile(false)}
+        totalRequests={totalRequests}
+        cacheHits={cacheHits}
+        timeSavedMs={timeSavedMs}
+        tokensSaved={tokensSaved}
       />
 
       {/* Main Workspace */}
@@ -143,6 +195,8 @@ export function App() {
           onToggleInspector={() => setIsInspectorOpen((prev) => !prev)}
           onOpenSystemPrompt={() => setIsSystemPromptOpen(true)}
           isInspectorOpen={isInspectorOpen}
+          theme={theme}
+          onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
         />
 
         {/* Messages or Welcome View */}
@@ -180,10 +234,10 @@ export function App() {
               {/* Error banner */}
               {errorBanner && (
                 <div className="w-full py-3 px-4 sm:px-6">
-                  <div className="max-w-3xl mx-auto p-3.5 rounded-lg border border-[#E4262D]/30 bg-[#E4262D]/5 flex items-start gap-2.5 text-xs text-[#E4262D]">
+                  <div className="max-w-3xl mx-auto p-4 rounded-xl border border-[#E4262D]/30 bg-[#E4262D]/10 flex items-start gap-3 text-xs text-[#E4262D]">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     <div className="flex-1 leading-relaxed">
-                      <span className="font-semibold block mb-0.5">Request Failed</span>
+                      <span className="font-bold block mb-0.5">Request Failed</span>
                       {errorBanner}
                     </div>
                   </div>
