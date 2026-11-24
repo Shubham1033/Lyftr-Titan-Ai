@@ -41,7 +41,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         {/* Model badge */}
         <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#F5F5F3] border border-neutral-200/80 text-xs font-mono text-neutral-600">
           <Cpu className="w-3.5 h-3.5 text-[#2563B0]" />
-          gemini-2.0-flash
+          gemini-3.5-flash-lite
         </div>
 
         {/* System prompt toggle */}

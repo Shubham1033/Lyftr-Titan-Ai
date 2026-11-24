@@ -140,7 +140,7 @@ async def execute_chat(
                 model=model,
                 messages=messages,
                 api_key=api_key,
-                timeout=15
+                timeout=30
             )
             
             reply_text = response.choices[0].message.content or ""
